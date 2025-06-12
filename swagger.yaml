@@ -1,0 +1,268 @@
+swagger: "2.0"
+info:
+  title: Meal Tracker API
+  description: Comprehensive API for tracking meals, allergies, and user interactions
+  version: 1.0.0
+  contact:
+    email: support@mealtracker.com
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+
+host: api.mealtracker.com
+basePath: /
+
+securityDefinitions:
+  JWT:
+    type: apiKey
+    name: Authorization
+    in: header
+    description: JWT token obtained during login (format: "Bearer {token}")
+
+security:
+  - JWT: []
+
+tags:
+  - name: Authentication
+    description: User registration, login, and profile management
+  - name: Meals
+    description: Create, read, update, and delete meal records
+  - name: Allergies
+    description: Track and manage food allergies
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Create a new user account with username, email, and password
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+                minLength: 3
+                maxLength: 50
+              email:
+                type: string
+                format: email
+              password:
+                type: string
+                minLength: 8
+      responses:
+        201:
+          description: User successfully registered
+        400:
+          description: Registration failed due to validation errors
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user and generate JWT token
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+              password:
+                type: string
+      responses:
+        200:
+          description: Successfully logged in
+          schema:
+            type: object
+            properties:
+              access_token:
+                type: string
+        401:
+          description: Invalid credentials
+
+  /meals:
+    post:
+      tags:
+        - Meals
+      summary: Create a new meal
+      description: Add a new meal record for the authenticated user
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              description:
+                type: string
+              ingredients:
+                type: string
+      responses:
+        201:
+          description: Meal created successfully
+        400:
+          description: Invalid meal data
+
+    get:
+      tags:
+        - Meals
+      summary: Get user's meals
+      description: Retrieve all meals for the authenticated user
+      responses:
+        200:
+          description: List of user's meals
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Meal'
+
+  /meals/{meal_id}:
+    get:
+      tags:
+        - Meals
+      summary: Get specific meal
+      parameters:
+        - in: path
+          name: meal_id
+          required: true
+          type: integer
+      responses:
+        200:
+          description: Meal details
+        404:
+          description: Meal not found
+
+    put:
+      tags:
+        - Meals
+      summary: Update a meal
+      parameters:
+        - in: path
+          name: meal_id
+          required: true
+          type: integer
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/Meal'
+      responses:
+        200:
+          description: Meal updated successfully
+        404:
+          description: Meal not found
+
+    delete:
+      tags:
+        - Meals
+      summary: Delete a meal
+      parameters:
+        - in: path
+          name: meal_id
+          required: true
+          type: integer
+      responses:
+        204:
+          description: Meal deleted successfully
+        404:
+          description: Meal not found
+
+  /allergies:
+    post:
+      tags:
+        - Allergies
+      summary: Create a new allergy
+      description: Add an allergy to a specific meal
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              meal_id:
+                type: integer
+              name:
+                type: string
+              severity:
+                type: string
+                enum: ['mild', 'moderate', 'severe']
+      responses:
+        201:
+          description: Allergy created successfully
+        400:
+          description: Invalid allergy data
+
+    get:
+      tags:
+        - Allergies
+      summary: Get user's allergies
+      description: Retrieve all allergies for the authenticated user
+      responses:
+        200:
+          description: List of user's allergies
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Allergy'
+
+  /allergies/users-with-allergies:
+    get:
+      tags:
+        - Allergies
+      summary: Get users with allergies
+      description: Retrieve all users who have registered allergies
+      responses:
+        200:
+          description: List of users with their allergy counts
+
+  /allergies/meals-causing-allergies:
+    get:
+      tags:
+        - Allergies
+      summary: Get meals causing allergies
+      description: Retrieve meals sorted by the number of allergies they have caused
+      responses:
+        200:
+          description: List of meals with their allergy counts
+
+definitions:
+  Meal:
+    type: object
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      description:
+        type: string
+      ingredients:
+        type: string
+      allergy_risk:
+        type: number
+        format: float
+
+  Allergy:
+    type: object
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      severity:
+        type: string
+        enum: ['mild', 'moderate', 'severe']
+      meal_id:
+        type: integer
+      user_id:
+        type: integer

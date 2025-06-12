@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13-alpine
+    restart: always
+    environment:
+      - POSTGRES_DB=meal_tracker_db
+      - POSTGRES_USER=mealtracker
+      - POSTGRES_PASSWORD=secure_meal_tracker_password
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mealtracker -d meal_tracker_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    restart: always
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URI=postgresql://mealtracker:secure_meal_tracker_password@db:5432/meal_tracker_db
+      - JWT_SECRET_KEY=your_super_secret_key_here
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./data/app:/app/data
+    ports:
+      - "5000:5000"
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    restart: always
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@mealtracker.com
+      - PGADMIN_DEFAULT_PASSWORD=admin_dashboard_password
+    volumes:
+      - ./data/pgadmin:/var/lib/pgadmin
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
+  app_data:
+  pgadmin_data:
+
+networks:
+  default:
+    driver: bridge
