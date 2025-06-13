@@ -1,4 +1,4 @@
-from ..app.database import db
+from ..app.database import session
 from ..models.meal import Meal
 from ..models.allergy import Allergy
 from sqlalchemy import func
@@ -13,42 +13,42 @@ class MealService:
             ingredients=ingredients, 
             user_id=user_id
         )
-        db.session.add(meal)
-        db.session.commit()
+        session.add(meal)
+        session.commit()
         return meal
     
     @staticmethod
     def get_meal_by_id(meal_id, user_id):
         """Get a specific meal for a user"""
-        return Meal.query.filter_by(id=meal_id, user_id=user_id).first()
+        return session.query(Meal).filter_by(id=meal_id, user_id=user_id).first()
     
     @staticmethod
     def get_all_user_meals(user_id):
         """Get all meals for a user"""
-        return Meal.query.filter_by(user_id=user_id).all()
+        return session.query(Meal).filter_by(user_id=user_id).all()
     
     @staticmethod
     def update_meal(meal_id, user_id, **kwargs):
         """Update a meal"""
-        meal = Meal.query.filter_by(id=meal_id, user_id=user_id).first()
+        meal = session.query(Meal).filter_by(id=meal_id, user_id=user_id).first()
         if not meal:
             return None
         
         for key, value in kwargs.items():
             setattr(meal, key, value)
         
-        db.session.commit()
+        session.commit()
         return meal
     
     @staticmethod
     def delete_meal(meal_id, user_id):
         """Delete a meal"""
-        meal = Meal.query.filter_by(id=meal_id, user_id=user_id).first()
+        meal = session.query(Meal).filter_by(id=meal_id, user_id=user_id).first()
         if not meal:
             return False
         
-        db.session.delete(meal)
-        db.session.commit()
+        session.delete(meal)
+        session.commit()
         return True
     
     @staticmethod

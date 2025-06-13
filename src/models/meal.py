@@ -1,18 +1,20 @@
-from ..app.database import db, ma
+from ..app.database import Base
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Text
 from sqlalchemy.orm import relationship
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from marshmallow import fields, validates, ValidationError
 from datetime import datetime
 
-class Meal(db.Model):
+class Meal(Base):
     __tablename__ = 'meals'
     
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text)
-    ingredients = db.Column(db.Text)
-    allergy_risk = db.Column(db.Float, default=0.0)
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
+    description = Column(Text)
+    ingredients = Column(Text)
+    allergy_risk = Column(Float, default=0.0)
     
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     user = relationship('User', back_populates='meals')
     
     allergies = relationship('Allergy', back_populates='meal', cascade='all, delete-orphan')
@@ -21,12 +23,12 @@ class Meal(db.Model):
         """Update allergy risk based on number of allergies"""
         allergy_count = len(self.allergies)
         self.allergy_risk = min(allergy_count * 0.1, 0.3)  # Max 30% risk
-        db.session.commit()
 
-class MealSchema(ma.SQLAlchemyAutoSchema):
+class MealSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = Meal
         load_instance = True
+        include_relationships = True
     
     id = fields.Integer(dump_only=True)
     user_id = fields.Integer(required=True)

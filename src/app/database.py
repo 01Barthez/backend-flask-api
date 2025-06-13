@@ -1,10 +1,14 @@
-from flask_sqlalchemy import SQLAlchemy
-from flask_marshmallow import Marshmallow
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.ext.declarative import declarative_base
 
-db = SQLAlchemy()
-ma = Marshmallow()
+engine = None
+session = None
+Base = declarative_base()
 
 def init_db(app):
-    db.init_app(app)
-    ma.init_app(app)
-    return db
+    global engine, session
+    engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+    session = scoped_session(sessionmaker(bind=engine))
+    Base.metadata.bind = engine
+    return session

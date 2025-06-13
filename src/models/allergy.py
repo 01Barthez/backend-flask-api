@@ -1,18 +1,20 @@
-from ..app.database import db, ma
+from ..app.database import Base
+from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from marshmallow import fields, validates, ValidationError
 
-class Allergy(db.Model):
+class Allergy(Base):
     __tablename__ = 'allergies'
     
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    severity = db.Column(db.String(20), default='mild')
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
+    severity = Column(String(20), default='mild')
     
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     user = relationship('User', back_populates='allergies')
     
-    meal_id = db.Column(db.Integer, db.ForeignKey('meals.id'), nullable=False)
+    meal_id = Column(Integer, ForeignKey('meals.id'), nullable=False)
     meal = relationship('Meal', back_populates='allergies')
     
     def __init__(self, *args, **kwargs):
@@ -21,10 +23,11 @@ class Allergy(db.Model):
         if self.meal:
             self.meal.update_allergy_risk()
 
-class AllergySchema(ma.SQLAlchemyAutoSchema):
+class AllergySchema(SQLAlchemyAutoSchema):
     class Meta:
         model = Allergy
         load_instance = True
+        include_relationships = True
     
     id = fields.Integer(dump_only=True)
     user_id = fields.Integer(required=True)

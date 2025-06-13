@@ -1,17 +1,18 @@
-from ..app.database import db, ma
-from sqlalchemy.orm import relationship
+from ..app.database import Base
+from sqlalchemy import Column, Integer, String, relationship
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from marshmallow import fields
 from flask_bcrypt import Bcrypt
 
 bcrypt = Bcrypt()
 
-class User(db.Model):
+class User(Base):
     __tablename__ = 'users'
     
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
+    id = Column(Integer, primary_key=True)
+    username = Column(String(50), unique=True, nullable=False)
+    email = Column(String(120), unique=True, nullable=False)
+    password_hash = Column(String(255), nullable=False)
     
     meals = relationship('Meal', back_populates='user')
     allergies = relationship('Allergy', back_populates='user')
@@ -22,10 +23,11 @@ class User(db.Model):
     def check_password(self, password):
         return bcrypt.check_password_hash(self.password_hash, password)
 
-class UserSchema(ma.SQLAlchemyAutoSchema):
+class UserSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = User
         load_instance = True
+        include_relationships = True
         exclude = ('password_hash',)
     
     id = fields.Integer(dump_only=True)

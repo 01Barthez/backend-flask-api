@@ -5,8 +5,7 @@ from flask_cors import CORS
 from flasgger import Swagger
 from flask_talisman import Talisman
 from dotenv import load_dotenv
-
-from .database import init_db, db
+from .database import init_db, session
 from ..routes.auth import auth_bp
 from ..routes.user import user_bp
 from ..routes.meal import meal_bp
@@ -26,16 +25,18 @@ def create_app():
     # Security Configurations
     Talisman(app, 
              content_security_policy={
-                 'default-src': '\'self\'',
-                 'script-src': '\'self\'',
-                 'style-src': '\'self\'',
+                 'default-src': '\\self\\',
+                 'script-src': '\\self\\',
+                 'style-src': '\\self\\',
              },
              force_https=True,
              strict_transport_security=True,
              x_frame_options='SAMEORIGIN')
     
-    # Extensions
+    # Initialize database
     init_db(app)
+    
+    # Extensions
     JWTManager(app)
     CORS(app, resources={r"/*": {"origins": "*"}})
     

@@ -1,14 +1,15 @@
-from flask_migrate import Migrate
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
 from .main import create_app
-from .database import db
+from .database import Base
 
 app = create_app()
-migrate = Migrate(app, db)
 
 def init_migrations():
     """Initialize database migrations"""
     with app.app_context():
-        db.create_all()
+        engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+        Base.metadata.create_all(bind=engine)
 
 if __name__ == '__main__':
     init_migrations()

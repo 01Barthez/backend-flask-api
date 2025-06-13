@@ -1,4 +1,4 @@
-from ..app.database import db
+from ..app.database import session
 from ..models.allergy import Allergy
 from ..models.user import User
 from ..models.meal import Meal
@@ -9,7 +9,7 @@ class AllergyService:
     def create_allergy(user_id, meal_id, name, severity='mild'):
         """Create a new allergy for a user's meal"""
         # Check if the meal belongs to the user
-        meal = Meal.query.filter_by(id=meal_id, user_id=user_id).first()
+        meal = session.query(Meal).filter_by(id=meal_id, user_id=user_id).first()
         if not meal:
             raise ValueError("Meal not found or does not belong to the user")
         
@@ -20,8 +20,8 @@ class AllergyService:
             user_id=user_id, 
             meal_id=meal_id
         )
-        db.session.add(allergy)
-        db.session.commit()
+        session.add(allergy)
+        session.commit()
         
         # Update meal's allergy risk
         meal.update_allergy_risk()
@@ -31,24 +31,24 @@ class AllergyService:
     @staticmethod
     def get_user_allergies(user_id):
         """Get all allergies for a user"""
-        return Allergy.query.filter_by(user_id=user_id).all()
+        return session.query(Allergy).filter_by(user_id=user_id).all()
     
     @staticmethod
     def get_allergy_by_id(allergy_id, user_id):
         """Get a specific allergy for a user"""
-        return Allergy.query.filter_by(id=allergy_id, user_id=user_id).first()
+        return session.query(Allergy).filter_by(id=allergy_id, user_id=user_id).first()
     
     @staticmethod
     def update_allergy(allergy_id, user_id, **kwargs):
         """Update an allergy"""
-        allergy = Allergy.query.filter_by(id=allergy_id, user_id=user_id).first()
+        allergy = session.query(Allergy).filter_by(id=allergy_id, user_id=user_id).first()
         if not allergy:
             return None
         
         for key, value in kwargs.items():
             setattr(allergy, key, value)
         
-        db.session.commit()
+        session.commit()
         
         # Update meal's allergy risk if severity changes
         if allergy.meal:

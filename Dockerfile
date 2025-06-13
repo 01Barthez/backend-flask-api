@@ -22,6 +22,7 @@ RUN addgroup --system --gid 1001 appuser \
 # Copy requirements and install Python dependencies
 COPY requirements.txt .
 RUN pip install --upgrade pip \
+    && pip install "marshmallow<4.0.0" \
     && pip install -r requirements.txt \
     && pip install gunicorn
 
